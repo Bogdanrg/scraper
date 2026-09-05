@@ -25,3 +25,5 @@ ENV = os.environ.get("ENV")
 BROKER_HOST = os.environ.get("BROKER_HOST")
 BROKER_PORT = os.environ.get("BROKER_PORT")
 BROKER_URL = f"redis://{BROKER_HOST}:{BROKER_PORT}"
+APP_HOST = os.environ.get("APP_HOST")
+APP_PORT = int(os.environ.get("APP_PORT"))
