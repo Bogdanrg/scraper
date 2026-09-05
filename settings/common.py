@@ -1,4 +1,16 @@
 import os
+from pathlib import Path
+
+import dotenv
+
+path_to_env = Path(__file__).parents[1].joinpath(".env")
+
+try:
+    dotenv.read_dotenv(path_to_env)
+except AttributeError:
+    from dotenv import load_dotenv
+
+    load_dotenv(dotenv_path=path_to_env)
 
 DB_HOST = os.environ.get("DB_HOST")
 DB_NAME = os.environ.get("DB_NAME")
