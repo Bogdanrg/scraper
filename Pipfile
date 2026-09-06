@@ -17,6 +17,8 @@ aiohttp = "*"
 tenacity = "*"
 bs4 = "*"
 lxml = "*"
+pytest = "*"
+pytest-asyncio = "*"
 
 [dev-packages]
 
