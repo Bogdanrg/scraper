@@ -1,3 +1,4 @@
+from core.shared.db_mixins import TimestampMixin
 from db.orm import Base
 from typing import List
 
@@ -5,7 +6,7 @@ from sqlalchemy import Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
-class Category(Base):
+class Category(Base, TimestampMixin):
     __tablename__ = "categories"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
