@@ -2,10 +2,10 @@ import uvicorn
 import settings
 
 from fastapi import FastAPI
-from api.v1.scrap_router.scrap_routes import scrap_router
+from api.v1.v1_router import v1_router
 
 fast_api = FastAPI()
-fast_api.include_router(scrap_router)
+fast_api.include_router(v1_router)
 
 
 if __name__ == "__main__":
