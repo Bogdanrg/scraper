@@ -5,10 +5,11 @@ from sqlalchemy import Integer, Enum, DateTime, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from apps.catalog.enums import ScrapeStatus
+from core.shared.db_mixins import TimestampMixin
 from db.orm import Base
 
 
-class ScrapeRun(Base):
+class ScrapeRun(Base, TimestampMixin):
     __tablename__ = "scrape_runs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

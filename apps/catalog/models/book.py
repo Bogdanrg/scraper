@@ -4,10 +4,11 @@ from typing import Optional
 from sqlalchemy import Integer, String, Numeric, Text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from core.shared.db_mixins import TimestampMixin
 from db.orm import Base
 
 
-class Book(Base):
+class Book(Base, TimestampMixin):
     __tablename__ = "books"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
