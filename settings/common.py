@@ -27,3 +27,6 @@ BROKER_PORT = os.environ.get("BROKER_PORT")
 BROKER_URL = f"redis://{BROKER_HOST}:{BROKER_PORT}"
 APP_HOST = os.environ.get("APP_HOST")
 APP_PORT = int(os.environ.get("APP_PORT"))
+TEST_DB_NAME = os.environ.get("TEST_DB_NAME")
+TEST_DB_URL = f"{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{TEST_DB_NAME}"
+TEST_DB_URL_ASYNC = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{TEST_DB_NAME}"
