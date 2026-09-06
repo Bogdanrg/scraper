@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.catalog.enums import ScrapeStatus
 from apps.catalog.models import Book, Category, ScrapeRun
 from apps.catalog.schemas import BookSchema
+from apps.catalog.schemas.book_schema import BookFilterParams
 from apps.catalog.schemas.category_schema import CategorySchema
 from apps.catalog.schemas.scrap_run_schema import ScrapeRunReadSchema
 
@@ -45,41 +46,42 @@ class BookStorage(BaseStorage[BookSchema]):
     model_cls = Book
     schema_cls = BookSchema
 
-    # @inject
-    # async def filter_books(
-    #         self,
-    #         params: BookFilterParams,
-    #         session: AsyncSession = Provide["session"],
-    # ) -> tuple[List[BookRead], int]:
-    #     query = sa.select(self.model_cls).options(sa.orm.joinedload(self.model_cls.category))
-    #
-    #     if params.query:
-    #         query = query.where(self.model_cls.title.ilike(f"%{params.query}%"))
-    #     if params.category_id:
-    #         query = query.where(self.model_cls.category_id == params.category_id)
-    #     if params.category_slug:
-    #         query = query.join(self.model_cls.category).where(Category.slug == params.category_slug)
-    #     if params.min_price is not None:
-    #         query = query.where(self.model_cls.price >= params.min_price)
-    #     if params.max_price is not None:
-    #         query = query.where(self.model_cls.price <= params.max_price)
-    #     if params.rating is not None:
-    #         query = query.where(self.model_cls.rating == params.rating)
-    #     if params.min_rating is not None:
-    #         query = query.where(self.model_cls.rating >= params.min_rating)
-    #     if params.in_stock_only:
-    #         query = query.where(self.model_cls.availability > 0)
-    #
-    #     count_query = sa.select(sa.func.count()).select_from(query.subquery())
-    #
-    #     offset = (params.page - 1) * params.page_size
-    #     query = query.limit(params.page_size).offset(offset).order_by(self.model_cls.id.desc())
-    #
-    #     async with start_session(session):
-    #         total = (await session.execute(count_query)).scalar() or 0
-    #         books = (await session.execute(query)).scalars().all()
-    #         adapter = TypeAdapter(List[self.schema_cls])
-    #         return adapter.validate_python(books), total
+    @inject
+    async def filter_books(
+            self,
+            params: BookFilterParams,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None,
+            session: AsyncSession = Provide["session"],
+    ) -> List[BookSchema]:
+        query = sa.select(self.model_cls).options(sa.orm.joinedload(self.model_cls.category))
+
+        if params.query:
+            query = query.where(self.model_cls.title.ilike(f"%{params.query}%"))
+        if params.category_id:
+            query = query.where(self.model_cls.category_id == params.category_id)
+        if params.category_slug:
+            query = query.join(self.model_cls.category).where(Category.slug == params.category_slug)
+        if params.min_price is not None:
+            query = query.where(self.model_cls.price >= params.min_price)
+        if params.max_price is not None:
+            query = query.where(self.model_cls.price <= params.max_price)
+        if params.rating is not None:
+            query = query.where(self.model_cls.rating == params.rating)
+        if params.min_rating is not None:
+            query = query.where(self.model_cls.rating >= params.min_rating)
+        if params.in_stock_only:
+            query = query.where(self.model_cls.availability > 0)
+
+        if limit is not None:
+            query = query.limit(limit)
+        if offset is not None:
+            query = query.offset(offset)
+
+        async with start_session(session):
+            books = (await session.execute(query)).scalars().all()
+            adapter = TypeAdapter(List[self.schema_cls])
+            return adapter.validate_python(books)
 
     @inject
     async def bulk_upsert_books(
@@ -104,10 +106,15 @@ class BookStorage(BaseStorage[BookSchema]):
                 "category_id": stmt.excluded.category_id,
                 "updated_at": sa.func.now(),
             },
-        ).returning(self.model_cls.id, (self.model_cls.created_at == stmt.excluded.created_at).label("is_created"))
+        ).returning(
+            self.model_cls.id,
+            sa.literal_column("xmax = 0").label("is_created"),
+        )
 
         async with start_session(session):
-            rows = (await session.execute(upsert_stmt)).all()
+            result = await session.execute(upsert_stmt)
+            rows = result.all()
+
             created = sum(1 for row in rows if row.is_created)
             updated = len(rows) - created
             return created, updated
@@ -126,6 +133,8 @@ class ScrapeRunStorage(BaseStorage[ScrapeRunReadSchema]):
         values: dict[str, Any] = {"status": status}
         if status in (ScrapeStatus.COMPLETED, ScrapeStatus.FAILED):
             values["finished_at"] = datetime.now(timezone.utc)
+        elif status == ScrapeStatus.RUNNING:
+            values["started_at"] = datetime.now(timezone.utc)
         if error_log:
             values["error_log"] = error_log
 
