@@ -7,10 +7,10 @@ from core.schemas import ORMSchema
 
 class ScrapeRunBaseSchema(ORMSchema):
     status: ScrapeStatus
-    items_processed: int
-    items_created: int
-    items_updated: int
-    items_failed: int
+    items_processed: Optional[int] = None
+    items_created: Optional[int] = None
+    items_updated: Optional[int] = None
+    items_failed: Optional[int] = None
     error_log: Optional[str] = None
 
 
