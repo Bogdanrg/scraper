@@ -30,8 +30,5 @@ class CatalogCases:
         scrap_run = await self._scrap_storage.create()
         scrape_catalog_task.delay(run_id=scrap_run.id)
 
-    async def list_scrape_runs(
-            self,
-            pagination_params: PaginationParams,
-    ) -> List[ScrapeRunReadSchema]:
+    async def list_scrape_runs(self, pagination_params: PaginationParams) -> List[ScrapeRunReadSchema]:
         return await self._scrap_storage.list_objects(**dict(pagination_params), order_by="started_at")
