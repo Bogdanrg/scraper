@@ -1,0 +1,58 @@
+services:
+  redis:
+    image: redis
+    container_name: "redis"
+    ports:
+      - '${BROKER_PORT}:${BROKER_PORT}'
+    env_file:
+      - .env
+    networks:
+      - scrap
+
+  worker:
+    build: .
+    container_name: "worker"
+    entrypoint: [ "bash", "celery-ep.sh" ]
+    volumes:
+      - .:/app
+    networks:
+      - scrap
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
+  app:
+    build: .
+    container_name: "app"
+    entrypoint: [ "bash", "entrypoint.sh" ]
+    ports:
+      - '${APP_PORT}:${APP_PORT}'
+    volumes:
+      - .:/app
+    networks:
+      - scrap
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  db:
+    image: postgres
+    container_name: "db"
+    networks:
+      - scrap
+    volumes:
+      - scrap:/var/lib/postgresql/data/
+    ports:
+      - '${DB_PORT}:${DB_PORT}'
+    env_file:
+      - .env
+
+networks:
+  scrap:
+    external: false
+
+volumes:
+  scrap:
+    external: false

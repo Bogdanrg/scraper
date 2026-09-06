@@ -1,0 +1,26 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+celery = {extras = ["redis"] }
+alembic = "*"
+dependency-injector = "*"
+asyncpg = "*"
+psycopg2-binary = "*"
+pydantic = "*"
+fastapi = "*"
+uvicorn = "*"
+python-dotenv = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"
+python_full_version = "3.12.13"
+
+[scripts]
+server = "python -m app"
+migrate = "alembic upgrade head"
+celery = "celery -A scraper.celery worker --loglevel=info"
